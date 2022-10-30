@@ -1,23 +1,34 @@
 import matplotlib.pyplot as plt
-import utils
+
+import engine_plots
+from units import torque
 from parts.crankshaft import Crankshaft
 
+# KTM Duke 690 Data
 rpm = [2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000]
 torques = [20, 37, 40, 45, 48, 50, 45, 40]
-hps = [utils.torque_to_horsepower(torques[index], rpm) for index, rpm in enumerate(rpm)]
+hps = [torque.to_hp(torques[index], rpm) for index, rpm in enumerate(rpm)]
+newton_meters = [torque.to_N_m(pound_feet) for pound_feet in torques]
+kilo_watts = [torque.to_kW(newton_meters[index], rpm) for index, rpm in enumerate(rpm)]
 
-plt.plot(rpm, torques, color='green', label='Torque')
-plt.plot(rpm, hps, color='red', label='HP')
+fig, axis = plt.subplots(2, 2)
+
+fig.set_size_inches(7, 9)
+
+engine_plots.plot(
+    axis[0, 0], 'Torque/HP', rpm, {'lbs.ft': torques, 'hp': hps}, {'xlabel': 'RPM', 'ylim': (0, 80)}
+)
+
+engine_plots.plot(
+    axis[1, 0], 'Newton Meter/Kilo Watts', rpm, {'N.m': newton_meters, 'kW': kilo_watts}, {'xlabel': 'RPM', 'ylim': (0, 80)}
+)
 
 crankshaft = Crankshaft(0.05)
-force_on_crank = [crankshaft.rev_calc_force(torque) for torque in torques]
-print(force_on_crank)
-plt.plot(rpm, force_on_crank, color='blue', label='Force On Crank')
+force_on_crank = [crankshaft.rev_calc_force(newton_meter) for newton_meter in newton_meters]
 
 
-plt.title('Dyno Chart')
-plt.xlabel('RPM')
-# plt.ylim((0, 80))
-plt.legend()
+engine_plots.plot(
+    axis[0, 1], 'Crank Force', rpm, {'N': force_on_crank}, {'xlabel': 'RPM'}
+)
+
 plt.show()
-
